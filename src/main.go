@@ -11,7 +11,7 @@ const (
 	port string = "6060"
 )
 
-var db []Account = make([]Account, 0)
+var db []*Account
 
 func main() {
 	router := gin.New()

@@ -9,8 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var Mutex sync.Mutex
-
 func createAcc(c *gin.Context) {
 	var details AccountDetails
 
@@ -20,10 +18,11 @@ func createAcc(c *gin.Context) {
 		return
 	}
 
-	newAcc := Account{
+	newAcc := &Account{
 		AccountDetails: details,
 		Balance:        0.0,
 		ID:             len(db) + 1,
+		Mutex:          sync.Mutex{},
 	}
 	db = append(db, newAcc)
 
@@ -39,12 +38,10 @@ func deposit(c *gin.Context) {
 		return
 	}
 
-	var Acc BankAccount = &db[index]
+	var Acc BankAccount = db[index]
 
 	errorChan := make(chan error)
 	go func() {
-		Mutex.Lock()
-		defer Mutex.Unlock()
 		errorChan <- Acc.Deposit(amount)
 	}()
 
@@ -67,12 +64,10 @@ func withdraw(c *gin.Context) {
 		return
 	}
 
-	var Acc BankAccount = &db[index]
+	var Acc BankAccount = db[index]
 
 	errorChan := make(chan error)
 	go func() {
-		Mutex.Lock()
-		defer Mutex.Unlock()
 		errorChan <- Acc.Withdraw(amount)
 	}()
 
@@ -94,12 +89,10 @@ func balance(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var Acc BankAccount = &db[index]
+	var Acc BankAccount = db[index]
 
 	floatChan := make(chan float64)
 	go func() {
-		Mutex.Lock()
-		defer Mutex.Unlock()
 		floatChan <- Acc.GetBalance()
 	}()
 
